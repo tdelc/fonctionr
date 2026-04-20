@@ -1,25 +1,8 @@
-library(shiny)
-library(shinydashboard)
-library(shinyWidgets)
-library(shinyAce)
-library(tidyverse)
-library(fonctionr)
-library(gt)
-library(DT)
-library(shiny.i18n)
-library(tidyverse)
-library(survey)
-library(srvyr)
-
-source("fonctions.R")
-
-obj_design <- getShinyOption("obj_design", NULL)
-
 server <- function(input, output, session) {
 
   observeEvent(input$lang, ignoreInit = TRUE, {
     i18n$set_translation_language(input$lang)
-    shiny.i18n::update_lang(input$lang)
+    shiny.i18n::update_lang(input$lang, session)
 
     updateTextInput(session,"prop_title",value = i18n$t("Proportion par groupe"))
     updateTextInput(session,"distrib_title",value = i18n$t("Distribution par groupe"))
@@ -28,25 +11,21 @@ server <- function(input, output, session) {
     updateTextInput(session,"cont_title",value = i18n$t("Distribution d'une variable numérique"))
   })
 
-  design <- reactive({
-    obj_design
-  })
-
   vars_binary <- reactive({
-    design()$variables %>%
+    obj_design$variables %>%
       select(where(is.logical) | where(~ is.numeric(.x) &&
                                          all(na.omit(unique(.x)) %in% c(0, 1)))) %>%
       names()
   })
 
   vars_category <- reactive({
-    design()$variables %>%
+    obj_design$variables %>%
       select(where(~ n_distinct(na.omit(.x)) < 20)) %>%
       names()
   })
 
   vars_numeric <- reactive({
-    design()$variables %>%
+    obj_design$variables %>%
       select(where(is.numeric)) %>%
       names()
   })
@@ -73,7 +52,7 @@ server <- function(input, output, session) {
 
     code <- paste0(
       "resultats <- prop_group(\n",
-      "  design_silc_", input$year, ",\n",
+      "  data = obj_design,\n",
       "  prop_exp = ", input$prop_var, ",\n",
       "  group = ", input$prop_group, ",\n",
       opt_group,
@@ -85,8 +64,7 @@ server <- function(input, output, session) {
 
     resultats <- eval(substitute(
       prop_group(
-        design(),
-        weights = RB050,
+        obj_design,
         group = VAR1,
         group.fill = VAR2,
         prop_exp = VAR3,
@@ -144,8 +122,11 @@ server <- function(input, output, session) {
         mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%  # convertit en %
         datatable(
           rownames = FALSE,
+          extensions = "Buttons",
           options = list(
-            dom = 'tp',
+            dom = "Bfrtip",
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
+            # dom = 'tp',
             pageLength = 10,
             ordering = FALSE,
             columnDefs = list(
@@ -173,7 +154,7 @@ server <- function(input, output, session) {
 
     code <- paste0(
       "resultats <- ", fun_name, "(\n",
-      "  design_silc_", input$year, ",\n",
+      "  data = obj_design,\n",
       "  quali_var = ", input$distrib_var, ",\n",
       opt_group,
       "  title = ", deparse(input$distrib_title), "\n",
@@ -184,8 +165,7 @@ server <- function(input, output, session) {
 
     resultats <- eval(substitute(
       fun(
-        design(),
-        weights = RB050,
+        obj_design,
         quali_var = VAR1,
         group = VAR2,
         title = input$distrib_title
@@ -229,8 +209,11 @@ server <- function(input, output, session) {
         mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%
         datatable(
           rownames = FALSE,
+          extensions = "Buttons",
           options = list(
-            dom = 'tp',
+            # dom = 'tp',
+            dom = "Bfrtip",
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
             pageLength = 10,
             ordering = FALSE,
             columnDefs = list(
@@ -249,9 +232,13 @@ server <- function(input, output, session) {
   # === Onglet 3 : Moyennes ===
   observeEvent(input$mean_run, {
 
+    req(input$mean_var != input$mean_group)
+
+    group <- if (input$mean_group == "Aucun") NULL else as.name(input$mean_group)
+
     code <- paste0(
       "resultats <- mean_group(\n",
-      "  design_silc_", input$year, ",\n",
+      "  data = obj_design,\n",
       "  quanti_exp = ", input$mean_var, ",\n",
       "  group = ", input$mean_group, ",\n",
       "  title = ", deparse(input$mean_title), "\n",
@@ -262,13 +249,12 @@ server <- function(input, output, session) {
 
     resultats <- eval(substitute(
       mean_group(
-        design(),
-        weights = RB050,
+        obj_design,
         quanti_exp = VAR1,
         group = VAR2,
         title = input$mean_title
       ), list(VAR1 = as.name(input$mean_var),
-              VAR2 = as.name(input$mean_group))
+              VAR2 = group)
     ))
 
     output$mean_graph <- renderPlot(resultats$graph)
@@ -307,7 +293,7 @@ server <- function(input, output, session) {
   # === Onglet 4 : Comparaisons multiples ===
   output$many_vars_ui <- renderUI({
     pickerInput("many_vars", "Variables à comparer :",
-                choices = names(design()$variables),
+                choices = names(obj_design$variables),
                 multiple = TRUE, options = list(`actions-box` = TRUE))
   })
 
@@ -329,8 +315,7 @@ server <- function(input, output, session) {
 
     resultats <- eval(substitute(
       fun(
-        design(),
-        weights = RB050,
+        obj_design,
         list_vars = VAR1,
         title = input$prop_title
       ), list(VAR1 = vars_call
@@ -386,7 +371,7 @@ server <- function(input, output, session) {
 
     code <- paste0(
       "resultats <- ",fun_name,"(\n",
-      "  design_silc_", input$year, ",\n",
+      "  data = obj_design,\n",
       "  quanti_exp = ", input$cont_var, ",\n",
       opt_group,
       "  title = ", deparse(input$cont_title), "\n",
@@ -396,16 +381,15 @@ server <- function(input, output, session) {
     code <- paste0(pre_code,code,post_code)
 
     cont_min <- max(input$cont_min,
-                    min(design()$variables[[input$cont_var]],
+                    min(obj_design$variables[[input$cont_var]],
                         na.rm = T))
     cont_max <- min(input$cont_max,
-                    max(design()$variables[[input$cont_var]],
+                    max(obj_design$variables[[input$cont_var]],
                         na.rm = T))
 
     resultats <- eval(substitute(
       fun(
-        design(),
-        weights = RB050,
+        obj_design,
         quanti_exp = VAR1,
         group = VAR2,
         type = input$cont_type,
@@ -413,7 +397,7 @@ server <- function(input, output, session) {
         limits = c(cont_min,cont_max),
         title = input$prop_title
       ), list(VAR1 = as.name(input$cont_var),
-              VAR2 = as.name(cont_group)
+              VAR2 = cont_group
       )))
 
     output$cont_graph <- renderPlot(resultats$graph)
@@ -428,12 +412,10 @@ server <- function(input, output, session) {
   # === Onglet 5 : Distribution continue ===
   observeEvent(input$free_template, {
 
-
-
-    if (input$free_template == "Distribution catégorielle"){
+    if (input$free_template == "distrib_d"){
       code <- paste0(
         "distrib_d(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  quali_var = HT,\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
@@ -442,10 +424,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Distribution catégorielle par groupe"){
+    if (input$free_template == "distrib_group_d"){
       code <- paste0(
         "distrib_group_d(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  quali_var = HT,\n",
         "  group = DB076,\n",
         "  facet = NULL,\n",
@@ -455,10 +437,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Distribution continue"){
+    if (input$free_template == "distrib_c"){
       code <- paste0(
         "distrib_c(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  quanti_exp = EQ_INC20,\n",
         "  type = 'median',\n",
         "  limits = NULL, # c(0,60000)\n",
@@ -469,10 +451,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Distribution continue par groupe"){
+    if (input$free_template == "distrib_group_c"){
       code <- paste0(
         "distrib_group_c(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  quanti_exp = EQ_INC20,\n",
         "  group = RB090,\n",
         "  facet = NULL,\n",
@@ -482,10 +464,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Proportion par groupe"){
+    if (input$free_template == "prop_group"){
       code <- paste0(
         "prop_group(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  prop_exp = MIN60,\n",
         "  group = REGIO,\n",
         "  group.fill = NULL,\n",
@@ -496,10 +478,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Stat par groupe"){
+    if (input$free_template == "central_group"){
       code <- paste0(
         "central_group(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  quanti_exp = EQ_INC20,\n",
         "  type = 'mean', #mean, median\n",
         "  group = REGIO,\n",
@@ -511,10 +493,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Plusieurs indicateurs"){
+    if (input$free_template == "many_val"){
       code <- paste0(
         "many_val(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  list_vars = c(MIN50, MIN60, MIN70),\n",
         "  list_vars_lab = c('Seuil à 50%', 'Seuil à 60%', 'Seuil à 70%'),\n",
         "  type = 'mean', #mean, median, prop\n",
@@ -525,10 +507,10 @@ server <- function(input, output, session) {
       )
     }
 
-    if (input$free_template == "Plusieurs indicateurs par groupe"){
+    if (input$free_template == "many_val_group"){
       code <- paste0(
         "many_val_group(\n",
-        "  design_silc_",input$year,",\n",
+        "  data = obj_design,\n",
         "  list_vars = c(MIN50, MIN60, MIN70),\n",
         "  list_vars_lab = c('Seuil à 50%', 'Seuil à 60%', 'Seuil à 70%'),\n",
         "  type = 'mean', #mean, median, prop\n",
@@ -546,7 +528,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$free_askAI,{
     try({
-      text_out <- ask_AI(input$free_questionAI,design()$variables,"fr")
+      text_out <- ask_AI(input$free_questionAI,obj_design$variables,"fr")
       code <- TheOpenAIR::extract_r_code(text_out)
       updateAceEditor(session,"free_code",value = code)
     },silent=TRUE)
@@ -554,7 +536,7 @@ server <- function(input, output, session) {
 
   output$free_vars <- renderText({
     paste0("Liste des variables : ",
-           paste(colnames(design()),collapse = ", "))
+           paste(colnames(obj_design),collapse = ", "))
   })
 
   observeEvent(input$free_run, {
@@ -563,7 +545,7 @@ server <- function(input, output, session) {
     ALLOWED_FUNS <- c("many_val_group","many_val","central_group","prop_group",
                       "distrib_c","distrib_group_c","distrib_d","distrib_group_d")
 
-    list_resultats <- secure_function(code,ALLOWED_FUNS,design())
+    list_resultats <- secure_function(code,ALLOWED_FUNS,obj_design)
     resultats <- list_resultats$resultats
     msg <- list_resultats$msg
 

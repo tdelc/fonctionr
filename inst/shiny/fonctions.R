@@ -1,9 +1,10 @@
+# -----------------------------------------------------------------------------
+# Code pour réutilisation
+# -----------------------------------------------------------------------------
+
 pre_code <- paste0(
-  "library(tidyverse)\n",
-  "library(survey)\n",
+  "library(fonctionr)\n",
   "load(\"Z:/E8/0514-8532-SILC/SILC-inhoudelijk/SILC 2024/Méthodologie/design_silc.RData\")\n",
-  "\n",
-  "design_silc_2024 <- design_silc[[design_silc_2024]]",
   "\n"
 )
 
@@ -19,58 +20,6 @@ post_code <- paste0(
 breakdown_variables <- c("REGIO","DB076","RB090","CD_AGE","HT","HT2","TENSTA","ACTSTA_BE","EDUC")
 
 prompt_fr <- readLines("prompt_fr.txt")
-i18n <- Translator$new(translation_csvs_path = "i18n")
-i18n$set_translation_language(i18n$get_key_translation())
-
-prop_evo <- function(design, vc, facet = NULL, group = NULL,
-                      is_prop = F) {
-
-  group_vars <- c("RB010",facet,group)
-  group_provided <- !is.null(group)
-  facet_provided <- !is.null(facet)
-
-  stat_summary <- design %>% map_df(~{.x %>%
-      mutate(across(c(RB010,all_of(group_vars)),as.character)) %>%
-      group_by(RB010,across(all_of(group_vars))) %>%
-      summarise(
-        count = n(),
-        mean = srvyr::survey_mean(!!sym(vc),vartype = c("se","ci")),
-        .groups = "drop"
-      )
-  })
-
-  dodge_width <- if (group_provided) 0.2 else 0
-
-  p <- ggplot(stat_summary) +
-    aes(x = RB010, y = mean, group = 1)
-
-  # Ajouter groupe et couleur si group_provided
-  if (group_provided) {
-    p <- p + aes(group = !!sym(group), color = !!sym(group))
-  }
-
-  p <- p +
-    geom_point(position = position_dodge(width = dodge_width)) +
-    geom_line(position = position_dodge(width = dodge_width), alpha = 0.5,
-              linewidth=1.5) +
-    geom_linerange(
-      aes(ymin = mean_low, ymax = mean_upp),
-      position = position_dodge(width = dodge_width),
-      alpha = 0.5,linewidth=1
-    ) +
-    labs(x= "RB010",y = vc) +
-    theme_fonctionr()
-
-  # Facet si facet_provided
-  if (facet_provided) {
-    p <- p + facet_wrap(as.formula(paste("~", facet)), ncol = 1)
-  }
-  # Proportion si is_prop = T
-  if (is_prop) {
-    p <- p + scale_y_continuous(labels = scales::percent_format(accuracy = 1))
-  }
-  p
-}
 
 # Atomes autorisés
 is_scalar_atomic <- function(x) {
