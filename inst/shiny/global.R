@@ -24,8 +24,11 @@ if (is.null(obj_design)){
   obj_design <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)
 }
 
-i18n_path  <- getShinyOption("i18n_path",
-                             system.file("shiny/i18n", package = "fonctionr"))
+# i18n_path  <- getShinyOption("i18n_path",
+#                              system.file("shiny/i18n", package = "fonctionr"))
+
+appDir <- system.file("shiny", package = "fonctionr")
+i18n_path  <- getShinyOption("i18n_path",file.path(appDir, "i18n"))
 
 i18n <- shiny.i18n::Translator$new(translation_csvs_path = i18n_path)
 i18n$set_translation_language("fr")
