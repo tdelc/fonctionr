@@ -12,6 +12,19 @@ library(survey)
 library(srvyr)
 
 obj_design <- getShinyOption("obj_design", NULL)
+
+if (is.null(obj_design)){
+  message("Utilisation de eusilc comme données d'exemple")
+  message("obj <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)")
+  data(eusilc,package="laeken")
+
+  eusilc <- eusilc %>%
+    mutate(arpt60 = weighted.mean(eqIncome,rb050)*0.6,
+           arop = eqIncome <= arpt60)
+
+  obj_design <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)
+}
+
 i18n_path  <- getShinyOption("i18n_path",
                              system.file("shiny/i18n", package = "fonctionr"))
 

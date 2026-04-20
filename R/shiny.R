@@ -13,18 +13,6 @@
 #' }
 runShinyFonctionR <- function(obj = NULL) {
 
-  if (is.null(obj)){
-    message("Utilisation de eusilc comme données d'exemple")
-    message("obj <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)")
-    data(eusilc,package="laeken")
-
-    eusilc <- eusilc %>%
-      mutate(arpt60 = weighted.mean(eqIncome,rb050)*0.6,
-             arop = eqIncome <= arpt60)
-
-    obj <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)
-  }
-
   appDir <- system.file("shiny", package = "fonctionr")
   if (appDir == "") {
     stop("Could not find example directory. Try re-installing `fonctionr`.", call. = FALSE)
