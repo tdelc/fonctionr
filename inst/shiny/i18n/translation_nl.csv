@@ -1,53 +1,62 @@
-"fr","nl"
-"Changer la langue","Taal wijzigen"
-"Année :","Jaar:"
-"Proportions","Verhoudingen"
-"Distributions","Verdelingen"
-"Moyennes","Gemiddelden"
-"Moyenne","Gemiddelde"
-"Médiane","Mediaan"
-"Proportion","Verhoudinge"
-"Comparaisons multiples","Meervoudige vergelijkingen"
-"Distributions continues","Continue verdelingen"
-"Distributions des revenus","Inkomensverdelingen"
-"Paramètres","Parameters"
-"Variable à expliquer (binaires) :","Te verklaren variabele (binair):"
-"Variable de groupe :","Groepsvariabele:"
-"Sous-groupe (optionnel) :","Subgroep (optioneel):"
-"Titre du graphique :","Titel van de grafiek:"
-"Exécuter","Uitvoeren"
-"Résultats","Resultaten"
-"Graphique","Grafiek"
-"Évolution","Evolutie"
-"Tableau","Tabel"
-"Tableau de synthèse","Samenvattende tabel"
-"Code R","R-code"
-"Variable catégorielle :","Categorische variabele:"
-"Groupe (optionnel) :","Groep (optioneel):"
-"Variable quantitative :","Kwantitatieve variabele:"
-"Groupe :","Groep:"
-"Distribution par groupe","Verdeling per groep"
-"Proportion par groupe","Verhoudinge per groep"
-"Moyenne par groupe","Gemiddelde per groep"
-"Type de calcul :","Type berekening:"
-"Comparaison de plusieurs indicateurs","Vergelijking van meerdere indicatoren"
-"Variable continue :","Continue variabele:"
-"Type :","Type:"
-"Largeur de bande (bw)","Bandbreedte (bw)"
-"Minimum","Minimum"
-"Maximum","Maximum"
-"Titre :","Titel:"
-"Distribution d'une variable numérique","Verdeling van een numerieke variabele"
-"Tableau des quantiles","Kwantieltabel"
-"Données de densité","Dichtheidsgegevens"
-"Choix des breakdowns","Keuze van de onderverdelingen"
-"Paramètres graphiques","Grafische parameters"
-"Nombre de barres","Aantal balken"
-"Revenu min","Minimuminkomen"
-"Revenu max","Maximuminkomen"
-"Modification de la médiane","Aanpassing van de mediaan"
-"Pondération","Weging"
-"Toute la population","Hele bevolking"
-"Zoom sur les groupes sélectionnés","Zoom op geselecteerde groepen"
-"Poids","Gewichten"
-"Aucune","Geen"
+fr,nl
+Proportions,Proporties
+Distributions,Verdelingen
+Moyennes,Gemiddelden
+Comparaisons multiples,Meerdere vergelijkingen
+Distributions continues,Continue verdelingen
+Graphique libre,Vrije grafiek
+Paramètres,Instellingen
+Code,Code
+Graphique,Grafiek
+Tableau,Tabel
+Tableau de synthèse,Overzichtstabel
+Code R,R-code
+Tableau des quantiles,Kwantielentabel
+Exécuter,Uitvoeren
+Exécuter le code,Code uitvoeren
+Aucun,Geen
+Variable à expliquer (binaire) :,Te verklaren variabele (binair):
+Variable de groupe :,Groepsvariabele:
+Sous-groupe (optionnel) :,Subgroep (optioneel):
+Variable catégorielle :,Categorische variabele:
+Variable quantitative :,Kwantitatieve variabele:
+Variable continue :,Continue variabele:
+Groupe :,Groep:
+Groupe (optionnel) :,Groep (optioneel):
+Type de calcul :,Berekeningstype:
+Type :,Type:
+Largeur de bande (bw),Bandbreedte (bw)
+Minimum,Minimum
+Maximum,Maximum
+Variables à comparer :,Te vergelijken variabelen:
+Titre :,Titel:
+Titre du graphique :,Grafiektitel:
+Proportion par groupe,Proportie per groep
+Distribution par groupe,Verdeling per groep
+Moyenne par groupe,Gemiddelde per groep
+Comparaison de plusieurs indicateurs,Vergelijking van meerdere indicatoren
+Distribution d'une variable numérique,Verdeling van een numerieke variabele
+Distribution d'une variable catégorielle,Verdeling van een categorische variabele
+Distribution d'une variable catégorielle par groupe,Verdeling van een categorische variabele per groep
+Distribution d'une variable continue,Verdeling van een continue variabele
+Distribution d'une variable continue par groupe,Verdeling van een continue variabele per groep
+Valeur centrale (moyenne/médiane) par groupe,Centrale waarde (gemiddelde/mediaan) per groep
+Calculer plusieurs indicateurs,Meerdere indicatoren berekenen
+Choisir un template,Kies een sjabloon
+Distribution catégorielle,Categorische verdeling
+Distribution catégorielle par groupe,Categorische verdeling per groep
+Distribution continue,Continue verdeling
+Distribution continue par groupe,Continue verdeling per groep
+Stat par groupe,Stat per groep
+Plusieurs indicateurs,Meerdere indicatoren
+Plusieurs indicateurs par groupe,Meerdere indicatoren per groep
+Liste des variables : ,Lijst van variabelen: 
+⚠ Effectif insuffisant pour produire une estimation fiable pour certains groupes,⚠ Steekproef te klein voor een betrouwbare schatting voor sommige groepen
+⚠ Erreur dans le calcul de la fonction,⚠ Fout bij het berekenen van de functie
+Veuillez sélectionner au moins une variable !,Selecteer ten minste één variabele!
+Échantillon,Steekproef
+Population,Populatie
+Proportion,Proportie
+Min,Min
+Max,Max
+Moyenne,Gemiddelde

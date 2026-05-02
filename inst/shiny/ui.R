@@ -5,12 +5,10 @@ i18n$use_js()
 
 ui <- page_navbar(
   id = "main_nav",
-  title = "FonctionR",
+  title = "fonctionR",
   theme = bs_theme(
     version = 5,
-    bootswatch = "flatly"
-    # primary = "#2C3E50",
-    # "navbar-bg" = "#2C3E50"
+    preset = "default"
   ),
   lang = "fr",
   header = tagList(
@@ -27,16 +25,17 @@ ui <- page_navbar(
       sidebar = sidebar(
         width = 300,
         div(i18n$t("Paramètres"), class = "sidebar-title"),
-        selectInput("prop_var", i18n$t("Variable à expliquer (binaires) :"), choices = NULL),
+        selectInput("prop_var", i18n$t("Variable à expliquer (binaire) :"), choices = NULL),
         selectInput("prop_group", i18n$t("Variable de groupe :"), choices = NULL),
-        selectInput("prop_fill", i18n$t("Sous-groupe (optionnel) :"), choices = c("Aucun")),
+        selectInput("prop_fill", i18n$t("Sous-groupe (optionnel) :"),
+                    choices = setNames("__none__", i18n$t("Aucun"))),
         textInput("prop_title", i18n$t("Titre du graphique :"), "Proportion par groupe"),
         actionButton("prop_run", i18n$t("Exécuter"), icon = icon("play"), class = "btn-success")
       ),
+      uiOutput("prop_alert"),
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("prop_graph", height = "600px")),
         nav_panel(i18n$t("Tableau"), DTOutput("prop_tab")),
-        nav_panel(i18n$t("Tableau de synthèse"), gt_output("prop_gt")),
         nav_panel(i18n$t("Code R"), verbatimTextOutput("prop_code"))
       )
     )
@@ -53,14 +52,15 @@ ui <- page_navbar(
         width = 300,
         div(i18n$t("Paramètres"), class = "sidebar-title"),
         selectInput("distrib_var", i18n$t("Variable catégorielle :"), choices = NULL),
-        selectInput("distrib_group", i18n$t("Groupe (optionnel) :"), choices = c("Aucun")),
+        selectInput("distrib_group", i18n$t("Groupe (optionnel) :"),
+                    choices = setNames("__none__", i18n$t("Aucun"))),
         textInput("distrib_title", i18n$t("Titre :"), "Distribution par groupe"),
         actionButton("distrib_run", i18n$t("Exécuter"), icon = icon("play"), class = "btn-success")
       ),
+      uiOutput("distrib_alert"),
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("distrib_graph", height = "600px")),
         nav_panel(i18n$t("Tableau"), DTOutput("distrib_tab")),
-        nav_panel(i18n$t("Tableau de synthèse"), gt_output("distrib_gt")),
         nav_panel(i18n$t("Code R"), verbatimTextOutput("distrib_code"))
       )
     )
@@ -81,10 +81,10 @@ ui <- page_navbar(
         textInput("mean_title", i18n$t("Titre :"), "Moyenne par groupe"),
         actionButton("mean_run", i18n$t("Exécuter"), icon = icon("play"), class = "btn-success")
       ),
+      uiOutput("mean_alert"),
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("mean_graph", height = "600px")),
         nav_panel(i18n$t("Tableau"), DTOutput("mean_tab")),
-        nav_panel(i18n$t("Tableau de synthèse"), gt_output("mean_gt")),
         nav_panel(i18n$t("Code R"), verbatimTextOutput("mean_code"))
       )
     )
@@ -108,10 +108,10 @@ ui <- page_navbar(
         textInput("many_title", i18n$t("Titre :"), "Comparaison de plusieurs indicateurs"),
         actionButton("many_run", i18n$t("Exécuter"), icon = icon("play"), class = "btn-success")
       ),
+      uiOutput("many_alert"),
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("many_graph", height = "600px")),
         nav_panel(i18n$t("Tableau"), DTOutput("many_tab")),
-        nav_panel(i18n$t("Tableau de synthèse"), gt_output("many_gt")),
         nav_panel(i18n$t("Code R"), verbatimTextOutput("many_code"))
       )
     )
@@ -128,7 +128,8 @@ ui <- page_navbar(
         width = 300,
         div(i18n$t("Paramètres"), class = "sidebar-title"),
         selectInput("cont_var", i18n$t("Variable continue :"), choices = NULL),
-        selectInput("cont_group", i18n$t("Groupe (optionnel) :"), choices = c("Aucun")),
+        selectInput("cont_group", i18n$t("Groupe (optionnel) :"),
+                    choices = setNames("__none__", i18n$t("Aucun"))),
         selectInput("cont_type", i18n$t("Type :"), choices = c("mean", "median")),
         numericInput("cont_bw", i18n$t("Largeur de bande (bw)"), value = 0.7, min = 0.1, max = 2, step = 0.1),
         numericInput("cont_min", i18n$t("Minimum"), value = 0),
@@ -139,7 +140,6 @@ ui <- page_navbar(
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("cont_graph", height = "600px")),
         nav_panel(i18n$t("Tableau des quantiles"), DTOutput("cont_quant")),
-        nav_panel(i18n$t("Données de densité"), DTOutput("cont_dens")),
         nav_panel(i18n$t("Code R"), verbatimTextOutput("cont_code"))
       )
     )
@@ -156,7 +156,7 @@ ui <- page_navbar(
         width = 350,
         radioGroupButtons(
           inputId = "free_template",
-          label = "Choisir un template",
+          label = i18n$t("Choisir un template"),
           choiceNames = list(i18n$t("Distribution catégorielle"),
                              i18n$t("Distribution catégorielle par groupe"),
                              i18n$t("Distribution continue"),
@@ -173,7 +173,7 @@ ui <- page_navbar(
                               "central_group",
                               "many_val",
                               "many_val_group"),
-          individual = TRUE, justified = FALSE, size = "xs"
+          individual = TRUE, justified = FALSE, size = "sm"
         ),
         div(i18n$t("Code"), class = "sidebar-title"),
         aceEditor(
@@ -191,7 +191,8 @@ ui <- page_navbar(
       ),
       navset_card_tab(
         nav_panel(i18n$t("Graphique"), plotOutput("free_graph", height = "600px")),
-        nav_panel(i18n$t("Tableau"), DTOutput("free_tab"))
+        nav_panel(i18n$t("Tableau"), DTOutput("free_tab")),
+        nav_panel(i18n$t("Code R"), verbatimTextOutput("free_code_output"))
       )
     )
   ),

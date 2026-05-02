@@ -1,14 +1,11 @@
+library(fonctionr)
 library(shiny)
+library(shinyAce)
+library(shinyWidgets)
+library(shiny.i18n)
 library(bslib)
 library(bsicons)
-library(shinyWidgets)
-library(shinyAce)
-library(tidyverse)
-library(gt)
 library(DT)
-library(shiny.i18n)
-library(survey)
-library(srvyr)
 
 obj_design <- getShinyOption("obj_design", NULL)
 
@@ -23,9 +20,6 @@ if (is.null(obj_design)){
 
   obj_design <- svydesign(data=eusilc,ids=~rb030,weights=~rb050)
 }
-
-# i18n_path  <- getShinyOption("i18n_path",
-#                              system.file("shiny/i18n", package = "fonctionr"))
 
 appDir <- system.file("shiny", package = "fonctionr")
 i18n_path  <- getShinyOption("i18n_path",file.path(appDir, "i18n"))

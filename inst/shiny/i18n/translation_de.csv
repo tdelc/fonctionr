@@ -1,0 +1,62 @@
+fr,de
+Proportions,Anteile
+Distributions,Verteilungen
+Moyennes,Mittelwerte
+Comparaisons multiples,Mehrfachvergleiche
+Distributions continues,Stetige Verteilungen
+Graphique libre,Freies Diagramm
+Paramètres,Einstellungen
+Code,Code
+Graphique,Diagramm
+Tableau,Tabelle
+Tableau de synthèse,Übersichtstabelle
+Code R,R-Code
+Tableau des quantiles,Quantilstabelle
+Exécuter,Ausführen
+Exécuter le code,Code ausführen
+Aucun,Keine
+Variable à expliquer (binaire) :,Zu erklärende Variable (binär):
+Variable de groupe :,Gruppenvariable:
+Sous-groupe (optionnel) :,Untergruppe (optional):
+Variable catégorielle :,Kategoriale Variable:
+Variable quantitative :,Quantitative Variable:
+Variable continue :,Stetige Variable:
+Groupe :,Gruppe:
+Groupe (optionnel) :,Gruppe (optional):
+Type de calcul :,Berechnungstyp:
+Type :,Typ:
+Largeur de bande (bw),Bandbreite (bw)
+Minimum,Minimum
+Maximum,Maximum
+Variables à comparer :,Zu vergleichende Variablen:
+Titre :,Titel:
+Titre du graphique :,Diagrammtitel:
+Proportion par groupe,Anteil pro Gruppe
+Distribution par groupe,Verteilung pro Gruppe
+Moyenne par groupe,Mittelwert pro Gruppe
+Comparaison de plusieurs indicateurs,Vergleich mehrerer Indikatoren
+Distribution d'une variable numérique,Verteilung einer numerischen Variable
+Distribution d'une variable catégorielle,Verteilung einer kategorialen Variable
+Distribution d'une variable catégorielle par groupe,Verteilung einer kategorialen Variable nach Gruppe
+Distribution d'une variable continue,Verteilung einer stetigen Variable
+Distribution d'une variable continue par groupe,Verteilung einer stetigen Variable nach Gruppe
+Valeur centrale (moyenne/médiane) par groupe,Zentralwert (Mittelwert/Median) pro Gruppe
+Calculer plusieurs indicateurs,Mehrere Indikatoren berechnen
+Choisir un template,Vorlage auswählen
+Distribution catégorielle,Kategoriale Verteilung
+Distribution catégorielle par groupe,Kategoriale Verteilung nach Gruppe
+Distribution continue,Stetige Verteilung
+Distribution continue par groupe,Stetige Verteilung nach Gruppe
+Stat par groupe,Statistik pro Gruppe
+Plusieurs indicateurs,Mehrere Indikatoren
+Plusieurs indicateurs par groupe,Mehrere Indikatoren pro Gruppe
+Liste des variables : ,Variablenliste: 
+⚠ Effectif insuffisant pour produire une estimation fiable pour certains groupes,⚠ Stichprobe zu klein für eine zuverlässige Schätzung für einige Gruppen
+⚠ Erreur dans le calcul de la fonction,⚠ Fehler bei der Berechnung der Funktion
+Veuillez sélectionner au moins une variable !,Bitte wählen Sie mindestens eine Variable!
+Échantillon,Stichprobe
+Population,Population
+Proportion,Anteil
+Min,Min
+Max,Max
+Moyenne,Mittelwert

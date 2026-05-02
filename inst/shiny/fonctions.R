@@ -4,7 +4,6 @@
 
 pre_code <- paste0(
   "library(fonctionr)\n",
-  "load(\"Z:/E8/0514-8532-SILC/SILC-inhoudelijk/SILC 2024/Méthodologie/design_silc.RData\")\n",
   "\n"
 )
 
@@ -13,13 +12,6 @@ post_code <- paste0(
   "resultats$graph\n",
   "resultats$tab"
 )
-
-# openai_api_key(id_chatgpt)
-# set_chatlog(chatlog_id = "fonctionR",initial_content = "")
-
-breakdown_variables <- c("REGIO","DB076","RB090","CD_AGE","HT","HT2","TENSTA","ACTSTA_BE","EDUC")
-
-prompt_fr <- readLines("prompt_fr.txt")
 
 # Atomes autorisés
 is_scalar_atomic <- function(x) {
@@ -73,30 +65,30 @@ args_are_safe <- function(call_expr) {
 validate_single_allowed_call <- function(code_text, allowed_funs = ALLOWED_FUNS) {
   exprs <- try(parse(text = code_text, keep.source = FALSE), silent = TRUE)
   if (inherits(exprs, "try-error")) {
-    return(list(ok = FALSE, msg = "Code invalide : impossible de parser."))
+    return(list(ok = FALSE, msg = "Invalid code: cannot be parsed."))
   }
   if (length(exprs) != 1L) {
-    return(list(ok = FALSE, msg = "Le code doit contenir exactement UN appel de fonction."))
+    return(list(ok = FALSE, msg = "The code must contain exactly ONE function call"))
   }
   expr <- exprs[[1]]
   if (!is.call(expr)) {
-    return(list(ok = FALSE, msg = "Le code doit être un appel de fonction (ex: fun(arg1 = ..., ...))."))
+    return(list(ok = FALSE, msg = "The code must be a function call (e.g., fun(arg1 = ..., ...))"))
   }
   # Récupère le nom de la fonction appelée
   fun_sym <- expr[[1]]
   if (!is.symbol(fun_sym)) {
-    return(list(ok = FALSE, msg = "Nom de fonction invalide (pas de ::, :::, $, etc.)."))
+    return(list(ok = FALSE, msg = "Invalid function name (no ::, :::, $, etc.)"))
   }
   fun_name <- as.character(fun_sym)
   if (!fun_name %in% allowed_funs) {
     return(list(ok = FALSE, msg = sprintf(
-      "Fonction '%s' non autorisée. Autorisées : %s",
+      "Function ‘%s’ is not allowed. Allowed: %s",
       fun_name, paste(allowed_funs, collapse = ", ")
     )))
   }
   # Vérifie les arguments (pas d'appels imbriqués, seulement symboles/NULL/scalaires)
   if (!args_are_safe(expr)) {
-    return(list(ok = FALSE, msg = "Arguments non sûrs : appels imbriqués interdits."))
+    return(list(ok = FALSE, msg = "Unsafe arguments: nested calls are not allowed"))
   }
   list(ok = TRUE, expr = expr, fun_name = fun_name)
 }
@@ -109,7 +101,7 @@ secure_function <- function(code,allowed_funs = ALLOWED_FUNS, design){
   expr_code <- try(validate_single_allowed_call(code, allowed_funs), silent = TRUE)
   if (inherits(expr_code, "try-error")){
     resultats <- NULL
-    msg <- "Erreur dans l'écriture du code."
+    msg <- i18n$t("Error in code writing")
   }else if (!expr_code$ok) {
     resultats <- NULL
     msg <- expr_code$msg
@@ -117,44 +109,9 @@ secure_function <- function(code,allowed_funs = ALLOWED_FUNS, design){
     # 2) Évaluer en environnement isolé
     resultats <- try(eval(expr_code$expr), silent = TRUE)
     if (inherits(resultats, "try-error")) {
+      msg <- paste("Error during code submitting",resultats,sep = " : ")
       resultats <- NULL
-      msg <- "Erreur dans l'exécution du code."
     }
   }
   list(resultats = resultats,msg = msg)
 }
-
-pre_prompt <- function(df,langage = "fr"){
-
-  pre_prompt_fr <- paste(
-    paste(prompt_fr,collapse = " "),
-    "Voici les colonnes disponible dans la base de données :",
-    paste(names(df), collapse = ", ")
-    )
-
-  pre_prompt_nl <- paste(
-    paste(prompt_fr,collapse = " "),
-    "Voici les colonnes disponible dans la base de données :",
-    paste(names(df), collapse = ", ")
-  )
-
-  if (tolower(langage) == "fr") pre_prompt_fr else pre_prompt_nl
-}
-
-ask_AI <- function(text,df,language = "fr"){
-  if (language == "fr")
-    out <- "Erreur. Recommencer dans quelques minutes"
-  else
-    out <- "Sorry"
-  try({
-    prompt <- paste(pre_prompt(df,language),text)
-    print(prompt)
-    TheOpenAIR::clear_chatlog("fonctionR")
-    answer <- chat(prompt,chatlog_id = "fonctionR",
-                   model = "gpt-4o-mini",output = "response_object")
-    print(answer)
-    out <- answer$choices$message$content
-  },silent = TRUE)
-  out
-}
-

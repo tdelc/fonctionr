@@ -1,0 +1,62 @@
+fr,en
+Proportions,Proportions
+Distributions,Distributions
+Moyennes,Means
+Comparaisons multiples,Multiple comparisons
+Distributions continues,Continuous distributions
+Graphique libre,Free chart
+Paramètres,Settings
+Code,Code
+Graphique,Chart
+Tableau,Table
+Tableau de synthèse,Summary table
+Code R,R code
+Tableau des quantiles,Quantiles table
+Exécuter,Run
+Exécuter le code,Run the code
+Aucun,None
+Variable à expliquer (binaire) :,Variable to explain (binary):
+Variable de groupe :,Group variable:
+Sous-groupe (optionnel) :,Subgroup (optional):
+Variable catégorielle :,Categorical variable:
+Variable quantitative :,Quantitative variable:
+Variable continue :,Continuous variable:
+Groupe :,Group:
+Groupe (optionnel) :,Group (optional):
+Type de calcul :,Calculation type:
+Type :,Type:
+Largeur de bande (bw),Bandwidth (bw)
+Minimum,Minimum
+Maximum,Maximum
+Variables à comparer :,Variables to compare:
+Titre :,Title:
+Titre du graphique :,Chart title:
+Proportion par groupe,Proportion by group
+Distribution par groupe,Distribution by group
+Moyenne par groupe,Mean by group
+Comparaison de plusieurs indicateurs,Comparison of multiple indicators
+Distribution d'une variable numérique,Distribution of a numeric variable
+Distribution d'une variable catégorielle,Distribution of a categorical variable
+Distribution d'une variable catégorielle par groupe,Distribution of a categorical variable by group
+Distribution d'une variable continue,Distribution of a continuous variable
+Distribution d'une variable continue par groupe,Distribution of a continuous variable by group
+Valeur centrale (moyenne/médiane) par groupe,Central value (mean/median) by group
+Calculer plusieurs indicateurs,Compute multiple indicators
+Choisir un template,Choose a template
+Distribution catégorielle,Categorical distribution
+Distribution catégorielle par groupe,Categorical distribution by group
+Distribution continue,Continuous distribution
+Distribution continue par groupe,Continuous distribution by group
+Stat par groupe,Stat by group
+Plusieurs indicateurs,Multiple indicators
+Plusieurs indicateurs par groupe,Multiple indicators by group
+Liste des variables : ,Variables list: 
+⚠ Effectif insuffisant pour produire une estimation fiable pour certains groupes,⚠ Sample size too small to produce a reliable estimate for some groups
+⚠ Erreur dans le calcul de la fonction,⚠ Error while computing the function
+Veuillez sélectionner au moins une variable !,Please select at least one variable!
+Échantillon,Sample
+Population,Population
+Proportion,Proportion
+Min,Min
+Max,Max
+Moyenne,Mean

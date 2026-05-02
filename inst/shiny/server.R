@@ -31,23 +31,30 @@ server <- function(input, output, session) {
   })
 
   observe({
+    input$lang
     updateSelectInput(session,"prop_var",choices = vars_binary())
     updateSelectInput(session,"prop_group",choices = vars_category())
-    updateSelectInput(session,"prop_fill",choices = c("Aucun",vars_category()))
+    updateSelectInput(session,"prop_fill",
+                      choices = setNames(c("__none__",vars_category()),
+                                         c(i18n$t("Aucun"),vars_category())))
 
     updateSelectInput(session,"distrib_var",choices = vars_category())
-    updateSelectInput(session,"distrib_group",choices = c("Aucun",vars_category()))
+    updateSelectInput(session,"distrib_group",
+                      choices = setNames(c("__none__",vars_category()),
+                                         c(i18n$t("Aucun"),vars_category())))
 
     updateSelectInput(session,"mean_var",choices = vars_numeric())
     updateSelectInput(session,"mean_group",choices = vars_category())
 
     updateSelectInput(session,"cont_var",choices = vars_numeric())
-    updateSelectInput(session,"cont_group",choices = c("Aucun",vars_category()))
+    updateSelectInput(session,"cont_group",
+                      choices = setNames(c("__none__",vars_category()),
+                                         c(i18n$t("Aucun"),vars_category())))
   })
 
-  # === Onglet 1 : Proportions ===
+  #### Onglet 1 : Proportions ####
   observeEvent(input$prop_run, {
-    prop_fill <- if (input$prop_fill == "Aucun") NULL else as.name(input$prop_fill)
+    prop_fill <- if (input$prop_fill == "__none__") NULL else as.name(input$prop_fill)
     opt_group <- if (is.null(prop_fill)) "" else paste0("  group.fill = ", input$prop_fill, ",\n")
 
     code <- paste0(
@@ -76,58 +83,31 @@ server <- function(input, output, session) {
 
     min_n_sample <- min(resultats$tab$n_sample)
 
+    output$prop_alert <- renderUI({
+      if (min_n_sample < 30){
+        i18n$t("⚠ Effectif insuffisant pour produire une estimation fiable pour certains groupes")
+      }
+    })
+
     output$prop_graph <- renderPlot({
-      validate(
-        need(min_n_sample > 30,"Sous groupe trop faible pour faire un graphique")
-      )
       resultats$graph
     })
     output$prop_code  <- renderText(code)
 
-    resultats$tab <- resultats$tab %>%
-      select(-n_tot_weighted_low,-n_tot_weighted_upp,starts_with("n_true"))
-
-    output$prop_low <- render_gt({
-      prepa <- resultats$tab %>%
-        filter(n_sample <= 10)
-
-      if (nrow(prepa) == 0) return(NULL)
-
-      prepa %>%
-        select(-c(prop_low,prop_upp,n_tot_weighted)) %>%
-        gt() %>%
-        tab_header("Attention, petit échantillon détecté (<= 10)") %>%
-        cols_label(n_sample = "Échantillon",prop = "Proportion") %>%
-        fmt_percent(columns = starts_with("prop"),decimals = 1) %>%
-        fmt_number(columns = starts_with("n"),decimals = 0,
-                   sep_mark = " ")
-    })
-
-    output$prop_gt <- render_gt({
-      resultats$tab %>%
-        gt() %>%
-        tab_header(input$prop_title) %>%
-        cols_label(n_sample = "Échantillon",n_tot_weighted = "Population",
-                   prop = "Proportion",
-                   prop_low = "Min",prop_upp = "Max") %>%
-        fmt_percent(columns = starts_with("prop"),decimals = 1) %>%
-        fmt_number(columns = starts_with("n"),decimals = 0,
-                   sep_mark = " ") %>%
-        tab_footnote(paste0("Source : Statbel, SILC ",input$year),placement ="right")
-    })
-
     output$prop_tab <- renderDT({
       resultats$tab %>%
-        mutate(across(starts_with("prop"), ~ round(.x * 100, 1))) %>%  # convertit en %
-        mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%  # convertit en %
+        mutate(
+          across(starts_with("prop"), ~ round(.x * 100, 1)),
+          across(starts_with("n_"), ~ round(.x, 0))
+        ) %>%
         datatable(
           rownames = FALSE,
           extensions = "Buttons",
           options = list(
-            dom = "Bfrtip",
-            buttons = c("copy", "csv", "excel", "pdf", "print"),
-            # dom = 'tp',
+            dom = "Bfrtipl",
+            lengthMenu = list(c(10, 20, 50, 100), c('10', '20', '50', "100")),
             pageLength = 10,
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
             ordering = FALSE,
             columnDefs = list(
               list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
@@ -141,12 +121,12 @@ server <- function(input, output, session) {
     })
   })
 
-  # === Onglet 2 : Distributions ===
+  #### Onglet 2 : Distributions  ####
   observeEvent(input$distrib_run, {
 
     req(input$distrib_var != input$distrib_group)
 
-    group <- if (input$distrib_group == "Aucun") NULL else as.name(input$distrib_group)
+    group <- if (input$distrib_group == "__none__") NULL else as.name(input$distrib_group)
 
     fun_name  <- if (is.null(group)) "distrib_d" else "distrib_group_d"
     fun <- get(fun_name)
@@ -173,35 +153,17 @@ server <- function(input, output, session) {
               VAR2 = group)
     ))
 
+    min_n_sample <- min(resultats$tab$n_sample)
+
+    output$distrib_alert <- renderUI({
+      if (min_n_sample < 30){
+        i18n$t("⚠ Effectif insuffisant pour produire une estimation fiable pour certains groupes")
+      }
+    })
+
     output$distrib_tab   <- renderDT(resultats$tab)
     output$distrib_graph <- renderPlot(resultats$graph)
     output$distrib_code  <- renderText(code)
-
-    output$distrib_gt <- render_gt({
-
-      if (is.null(group)) {
-        resultats$tab %>%
-          gt() %>%
-          tab_header(input$distrib_title) %>%
-          cols_label(n_sample = "Échantillon",prop = "Proportion",
-                     n_weighted = "Population",prop_low = "Min",prop_upp = "Max") %>%
-          fmt_percent(columns = starts_with("prop"),decimals = 1) %>%
-          fmt_number(columns = starts_with("n_"),decimals = 0,
-                     sep_mark = " ") %>%
-          tab_footnote(paste0("Source : Statbel, SILC ",input$year),placement ="right")
-
-      }else{
-
-        resultats$tab %>%
-          select(!!sym(input$distrib_var),!!sym(group),prop) %>%
-          pivot_wider(names_from = !!sym(group),values_from = prop) %>%
-          gt() %>%
-          tab_header(input$distrib_title) %>%
-          fmt_percent(decimals = 1) %>%
-          tab_footnote("Source : Statbel",placement ="right")
-      }
-
-    })
 
     output$distrib_tab <- renderDT({
       resultats$tab %>%
@@ -229,12 +191,12 @@ server <- function(input, output, session) {
 
   })
 
-  # === Onglet 3 : Moyennes ===
+  #### Onglet 3 : Moyennes   ####
   observeEvent(input$mean_run, {
 
     req(input$mean_var != input$mean_group)
 
-    group <- if (input$mean_group == "Aucun") NULL else as.name(input$mean_group)
+    group <- if (input$mean_group == "__none__") NULL else as.name(input$mean_group)
 
     code <- paste0(
       "resultats <- mean_group(\n",
@@ -260,49 +222,45 @@ server <- function(input, output, session) {
     output$mean_graph <- renderPlot(resultats$graph)
     output$mean_code  <- renderText(code)
 
-    output$mean_gt <- render_gt({
-      resultats$tab %>%
-        select(!!sym(input$mean_group),n_sample,starts_with("mean")) %>%
-        gt() %>%
-        tab_header(input$prop_title) %>%
-        cols_label(n_sample = "Échantillon",mean = "Moyenne",
-                   mean_low = "Min",mean_upp = "Max") %>%
-        fmt_number(columns = starts_with("mean"),decimals = 1,
-                   sep_mark = " ") %>%
-        tab_footnote(paste0("Source : Statbel, SILC ",input$year),placement ="right")
-    })
-
     output$mean_tab <- renderDT({
       resultats$tab %>%
         mutate(across(starts_with("mean"), ~ round(.x, 1))) %>%
         mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%
         datatable(
           rownames = FALSE,
+          extensions = "Buttons",
           options = list(
-            dom = 'tp',
+            dom = "Bfrtipl",
+            lengthMenu = list(c(10, 20, 50, 100), c('10', '20', '50', "100")),
             pageLength = 10,
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
             ordering = FALSE,
             columnDefs = list(
-              list(className = 'dt-right', targets = which(grepl("mean", names(resultats$tab))))
+              list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
             )
           )
         )
     })
   })
 
-  # === Onglet 4 : Comparaisons multiples ===
+  #### Onglet 4 : Comparaisons multiples  ####
   output$many_vars_ui <- renderUI({
-    pickerInput("many_vars", "Variables à comparer :",
-                choices = names(obj_design$variables),
+    pickerInput("many_vars", i18n$t("Variables à comparer :"),
+                choices = sort(c(vars_numeric(),vars_binary())),
                 multiple = TRUE, options = list(`actions-box` = TRUE))
   })
 
-  observeEvent(input$run_many, {
+  observeEvent(input$many_run, {
+
+    validate(
+      need(input$many_vars, i18n$t('Check at least one variable!'))
+    )
+
     fun <- get(input$many_type)
 
     code <- paste0(
       "resultats <- ",input$many_type,"(\n",
-      "  design_silc_", input$year, ",\n",
+      "  data = obj_design,\n",
       "  list_vars = c(",paste(input$many_vars, collapse = ', '),"),\n",
       "  title = ", deparse(input$many_title), "\n",
       ")"
@@ -313,31 +271,26 @@ server <- function(input, output, session) {
     vars_syms <- lapply(input$many_vars, as.name)
     vars_call <- as.call(c(as.name("c"), vars_syms))
 
-    resultats <- eval(substitute(
-      fun(
-        obj_design,
-        list_vars = VAR1,
-        title = input$prop_title
-      ), list(VAR1 = vars_call
-      )))
+    resultats <- try({
+      eval(substitute(
+        fun(
+          obj_design,
+          list_vars = VAR1,
+          title = input$prop_title
+        ), list(VAR1 = vars_call
+        )))
+    },silent = T)
+
+    if (class(resultats)[1] == "try-error"){
+      output$many_alert <- renderUI({
+        paste(i18n$t("⚠ Erreur dans le calcul de la fonction"),input$many_type)
+      })
+    }else{
+      output$many_alert <- renderUI({NULL})
+    }
 
     output$many_graph <- renderPlot(resultats$graph)
     output$many_code  <- renderText(code)
-
-    output$many_gt <- render_gt({
-      resultats$tab %>%
-        gt() %>%
-        tab_header(input$distrib_title) %>%
-        cols_label(n_sample = "Échantillon",n_weighted = "Population") %>%
-        fmt_percent(columns = starts_with("prop"),decimals = 1) %>%
-        fmt_number(columns = starts_with("median"),decimals = 1,
-                   sep_mark = " ") %>%
-        fmt_number(columns = starts_with("mean"),decimals = 1,
-                   sep_mark = " ") %>%
-        fmt_number(columns = starts_with("n_"),decimals = 0,
-                   sep_mark = " ") %>%
-        tab_footnote(paste0("Source : Statbel, SILC ",input$year),placement ="right")
-    })
 
     output$many_tab <- renderDT({
       resultats$tab %>%
@@ -347,10 +300,16 @@ server <- function(input, output, session) {
         mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%
         datatable(
           rownames = FALSE,
+          extensions = "Buttons",
           options = list(
-            dom = 'tp',
+            dom = "Bfrtipl",
+            lengthMenu = list(c(10, 20, 50, 100), c('10', '20', '50', "100")),
             pageLength = 10,
-            ordering = FALSE
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
+            ordering = FALSE,
+            columnDefs = list(
+              list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
+            )
           )
         ) %>%
         formatString(
@@ -360,13 +319,13 @@ server <- function(input, output, session) {
     })
   })
 
-  # === Onglet 5 : Distribution continue ===
+  #### Onglet 5 : Distribution continue  ####
   observeEvent(input$cont_run, {
 
-    cont_group <- if (input$cont_group == "Aucun") NULL else as.name(input$cont_group)
+    cont_group <- if (input$cont_group == "__none__") NULL else as.name(input$cont_group)
     opt_group <- if (is.null(cont_group)) "" else paste0("  group = ", input$cont_group, ",\n")
 
-    fun_name <- if (input$cont_group == "Aucun") "distrib_continuous" else "distrib_group_continuous"
+    fun_name <- if (input$cont_group == i18n$t("__none__")) "distrib_continuous" else "distrib_group_continuous"
     fun <- get(fun_name)
 
     code <- paste0(
@@ -403,23 +362,43 @@ server <- function(input, output, session) {
     output$cont_graph <- renderPlot(resultats$graph)
     output$cont_code  <- renderText(code)
 
-    output$cont_dens <- renderDT(resultats$dens)
-    output$cont_quant <- renderDT(resultats$quant)
+    output$cont_quant <- renderDT({
+      resultats$quant %>%
+        datatable(
+          rownames = FALSE,
+          extensions = "Buttons",
+          options = list(
+            dom = "Bfrtipl",
+            lengthMenu = list(c(10, 20, 50, 100), c('10', '20', '50', "100")),
+            pageLength = 10,
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
+            ordering = FALSE,
+            columnDefs = list(
+              list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
+            )
+          )
+        )
+    })
 
 
   })
 
-  # === Onglet 5 : Distribution continue ===
+  #### Onglet 6 : Graphique libre  ####
+
+  free_code <- reactiveVal("")
+
   observeEvent(input$free_template, {
 
     if (input$free_template == "distrib_d"){
       code <- paste0(
         "distrib_d(\n",
         "  data = obj_design,\n",
-        "  quali_var = HT,\n",
+        "  quali_var = ",vars_category()[1],",\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = \"Distribution d'une variable catégorielle\"\n",
+        "  title = \"",
+        i18n$t("Distribution d'une variable catégorielle"),
+        "\"\n",
         ")"
       )
     }
@@ -428,11 +407,13 @@ server <- function(input, output, session) {
       code <- paste0(
         "distrib_group_d(\n",
         "  data = obj_design,\n",
-        "  quali_var = HT,\n",
-        "  group = DB076,\n",
+        "  quali_var = ",vars_category()[1],",\n",
+        "  group = ",vars_category()[2],",\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = \"Distribution d'une variable catégorielle par groupe\"\n",
+        "  title = \"",
+        i18n$t("Distribution d'une variable catégorielle par groupe"),
+        "\"\n",
         ")"
       )
     }
@@ -441,12 +422,14 @@ server <- function(input, output, session) {
       code <- paste0(
         "distrib_c(\n",
         "  data = obj_design,\n",
-        "  quanti_exp = EQ_INC20,\n",
+        "  quanti_exp = ",vars_numeric()[1],",\n",
         "  type = 'median',\n",
         "  limits = NULL, # c(0,60000)\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = \"Distribution d'une variable continue\"\n",
+        "  title = \"",
+        i18n$t("Distribution d'une variable continue"),
+        "\"\n",
         ")"
       )
     }
@@ -455,11 +438,13 @@ server <- function(input, output, session) {
       code <- paste0(
         "distrib_group_c(\n",
         "  data = obj_design,\n",
-        "  quanti_exp = EQ_INC20,\n",
-        "  group = RB090,\n",
+        "  quanti_exp = ",vars_numeric()[1],",\n",
+        "  group = ",vars_category()[1],",\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = \"Distribution d'une variable continue par groupe\"\n",
+        "  title = \"",
+        i18n$t("Distribution d'une variable continue par groupe"),
+        "\"\n",
         ")"
       )
     }
@@ -468,12 +453,14 @@ server <- function(input, output, session) {
       code <- paste0(
         "prop_group(\n",
         "  data = obj_design,\n",
-        "  prop_exp = MIN60,\n",
-        "  group = REGIO,\n",
+        "  prop_exp = ",vars_binary()[1],",\n",
+        "  group = ",vars_category()[1],",\n",
         "  group.fill = NULL,\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = 'Proportion par groupe'\n",
+        "  title = \"",
+        i18n$t("Proportion par groupe"),
+        "\"\n",
         ")"
       )
     }
@@ -482,13 +469,15 @@ server <- function(input, output, session) {
       code <- paste0(
         "central_group(\n",
         "  data = obj_design,\n",
-        "  quanti_exp = EQ_INC20,\n",
+        "  quanti_exp = ",vars_numeric()[1],",\n",
         "  type = 'mean', #mean, median\n",
-        "  group = REGIO,\n",
+        "  group = ",vars_category()[1],",\n",
         "  group.fill = NULL,\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = 'Valeur centrale (moyenne/médiane) par groupe'\n",
+        "  title = \"",
+        i18n$t("Valeur centrale (moyenne/médiane) par groupe"),
+        "\"\n",
         ")"
       )
     }
@@ -497,12 +486,14 @@ server <- function(input, output, session) {
       code <- paste0(
         "many_val(\n",
         "  data = obj_design,\n",
-        "  list_vars = c(MIN50, MIN60, MIN70),\n",
-        "  list_vars_lab = c('Seuil à 50%', 'Seuil à 60%', 'Seuil à 70%'),\n",
+        "  list_vars = c(",vars_numeric()[1],", ",vars_numeric()[2],", ",vars_numeric()[3],"),\n",
+        "  list_vars_lab = c('label 1', 'label 2', 'label 3'),\n",
         "  type = 'mean', #mean, median, prop\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = 'Calculer plusieurs indicateurs'\n",
+        "  title = \"",
+        i18n$t("Plusieurs indicateurs"),
+        "\"\n",
         ")"
       )
     }
@@ -511,27 +502,25 @@ server <- function(input, output, session) {
       code <- paste0(
         "many_val_group(\n",
         "  data = obj_design,\n",
-        "  list_vars = c(MIN50, MIN60, MIN70),\n",
-        "  list_vars_lab = c('Seuil à 50%', 'Seuil à 60%', 'Seuil à 70%'),\n",
+        "  list_vars = c(",vars_numeric()[1],", ",vars_numeric()[2],", ",vars_numeric()[3],"),\n",
+        "  list_vars_lab = c('label 1', 'label 2', 'label 3'),\n",
         "  type = 'mean', #mean, median, prop\n",
-        "  group = REGIO,\n",
+        "  group = ",vars_category()[4],",\n",
         "  facet = NULL,\n",
         "  filter_exp = NULL,\n",
-        "  title = 'Calculer plusieurs indicateurs'\n",
+        "  title = \"",
+        i18n$t("Plusieurs indicateurs par groupe"),
+        "\"\n",
         ")"
       )
     }
 
     updateAceEditor(session,"free_code",value = code)
-
+    free_code(code)
   })
 
-  observeEvent(input$free_askAI,{
-    try({
-      text_out <- ask_AI(input$free_questionAI,obj_design$variables,"fr")
-      code <- TheOpenAIR::extract_r_code(text_out)
-      updateAceEditor(session,"free_code",value = code)
-    },silent=TRUE)
+  observeEvent(input$free_code, {
+    free_code(input$free_code)
   })
 
   output$free_vars <- renderText({
@@ -541,7 +530,9 @@ server <- function(input, output, session) {
 
   observeEvent(input$free_run, {
 
-    code <- input$free_code
+    print(free_code())
+
+    code <- free_code()
     ALLOWED_FUNS <- c("many_val_group","many_val","central_group","prop_group",
                       "distrib_c","distrib_group_c","distrib_d","distrib_group_d")
 
@@ -554,27 +545,31 @@ server <- function(input, output, session) {
       resultats$graph
     })
 
+    output$free_code_output  <- renderText(paste0(pre_code,code,post_code))
+
     output$free_tab <- renderDT({
 
       resultats$tab %>%
-        mutate(across(starts_with("prop"), ~ round(.x, 4))) %>%  # convertit en %
+        mutate(across(starts_with("prop"), ~ round(.x*100, 2))) %>%  # convertit en %
         mutate(across(starts_with("n_"), ~ round(.x, 0))) %>%  # convertit en %
         datatable(
-          rownames = FALSE
-          # options = list(
-          #   dom = 't',
-          #   pageLength = 10,
-          #   ordering = FALSE,
-          #   columnDefs = list(
-          #     list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
-          #   )
-          # )
+          rownames = FALSE,
+          extensions = "Buttons",
+          options = list(
+            dom = "Bfrtipl",
+            lengthMenu = list(c(10, 20, 50, 100), c('10', '20', '50', "100")),
+            pageLength = 10,
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
+            ordering = FALSE,
+            columnDefs = list(
+              list(className = 'dt-right', targets = which(grepl("prop", names(resultats$tab))))
+            )
+          )
+        ) %>%
+        formatString(
+          columns = names(resultats$tab)[grepl("prop", names(resultats$tab))],
+          suffix = " %"
         )
-      # %>%
-      #   formatString(
-      #     columns = names(resultats$tab)[grepl("prop", names(resultats$tab))],
-      #     suffix = " %"
-      #   )
     })
 
 
